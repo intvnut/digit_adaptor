@@ -60,7 +60,7 @@ class digit_adaptor {
     }
 
   private:
-    using NCT = std::remove_const_t<T>;
+    using NCT = std::remove_cv_t<T>;
     using NCU = std::make_unsigned_t<NCT>;
 
     T& number_;
@@ -135,7 +135,7 @@ class digit_adaptor {
         constexpr mutable_reference_(const mutable_reference_&) = default;
 
         constexpr operator T () const noexcept {
-          return T(make_positive((*number_ / divisor_) % RADIX));
+          return T((make_positive(*number_) / divisor_) % RADIX);
         }
 
         constexpr const auto& operator=(const T& digit) const noexcept {
@@ -257,7 +257,7 @@ class digit_adaptor {
         : number_{ref.number_}, divisor_{ref.divisor_} {}
 
         constexpr operator T () const noexcept {
-          return T(make_positive((*number_ / divisor_) % RADIX));
+          return T((make_positive(*number_) / divisor_) % RADIX);
         }
 
         ~const_reference_() noexcept = default;
