@@ -69,13 +69,13 @@ int main() {
     auto mda = digit_adaptor{mu};
     auto cda = digit_adaptor{cu};
 
-    for (int i = 0; i < 7; ++i) {
+    for (std::size_t i = 0; i < std::min(mda.size(), cda.size()); ++i) {
       std::cout
         << "mda[" << i << "] == cda[" << i << "]? "
         << (mda[i] == cda[i]) << '\n';
     }
 
-    for (int i = 0; i < 7; ++i) {
+    for (std::size_t i = 0; i < std::min(mda.size(), cda.size()); ++i) {
       std::cout
         << "mda[" << i << "] + cda[" << i << "]? "
         << (mda[i] + cda[i]) << '\n';
@@ -134,13 +134,13 @@ int main() {
     auto mda = digit_adaptor<int, 5>{mu};
     auto cda = digit_adaptor<const int, 5>{cu};
 
-    for (int i = 0; i < 7; ++i) {
+    for (std::size_t i = 0; i < std::min(mda.size(), cda.size()); ++i) {
       std::cout
         << "mda[" << i << "] == cda[" << i << "]? "
         << (mda[i] == cda[i]) << '\n';
     }
 
-    for (int i = 0; i < 7; ++i) {
+    for (std::size_t i = 0; i < std::min(mda.size(), cda.size()); ++i) {
       std::cout
         << "mda[" << i << "] + cda[" << i << "]? "
         << (mda[i] + cda[i]) << '\n';
