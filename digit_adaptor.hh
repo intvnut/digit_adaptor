@@ -10,9 +10,10 @@ namespace jz {
 // Adapts an integer type (or type that behaves as one) to look like a standard
 // container holding digits in a particular radix.  The container can be const
 // without the contained entity being const.
-template <typename T, int RADIX = 10,
-          std::enable_if_t<(RADIX > 1), bool> = true>
+template <typename T, int RADIX = 10>
 class digit_adaptor {
+  static_assert(RADIX > 1, "RADIX must be larger than 1");
+
   public:
     constexpr explicit digit_adaptor(T& number) noexcept
     : number_{number}, digits_{total_digits(number)} {}
@@ -50,15 +51,8 @@ class digit_adaptor {
       return number_;
     }
 
-    // Returns the digit value itself if the underlying type is const.
-    // Otherwise, returns a digit_proxy which acts like an lvalue reference.
     constexpr auto operator[] (int index) const noexcept {
-      const auto divisor = compute_divisor(index, digits_);
-      if constexpr (std::is_const_v<T>) {
-        return make_positive((number_ / divisor) % RADIX);
-      } else {
-        return digit_adaptor::reference_<T>(&number_, divisor);
-      }
+      return reference{&number_, compute_divisor(index, digits_)};
     }
 
     constexpr std::size_t size() const noexcept {
@@ -112,7 +106,7 @@ class digit_adaptor {
           divisor *= RADIX;
         }
       } else {
-        for (auto i = 0; i != index; ++i) {
+        for (auto i = std::size_t{0}; i != index; ++i) {
           divisor *= RADIX;
         }
       }
@@ -120,28 +114,31 @@ class digit_adaptor {
       return divisor;
     }
 
-    // Forward declaration.
-    template <typename QT = T> class pointer_;
+    // Forward declarations.
+    class mutable_pointer_;
+    class const_pointer_;
+    class const_reference_;
 
     // Provides indirect access to a digit held in an underlying digit
     // adaptor. This fills the same purpose as std::bitset::reference, only
     // generalized for digit_adaptor.
-    // 
-    // The const-ness of the digit is carried in T, not the const-ness of
-    // digit_proxy itself.
-    template <typename QT = T>
-    class reference_ {
+    class mutable_reference_ {
       public:
-        constexpr reference_(QT* number, const T divisor) noexcept
+        using is_digit_adaptor_mutable_reference = std::true_type;
+
+        constexpr mutable_reference_(T* number, NCU divisor) noexcept
         : number_{number}, divisor_{divisor} {}
+
+        // Allow constructing copies of references from other references.
+        //     reference_ a = b;      is like   auto&  a = b;
+        //     reference_ a = foo();  is like   auto&& a = foo();
+        constexpr mutable_reference_(const mutable_reference_&) = default;
 
         constexpr operator T () const noexcept {
           return T(make_positive((*number_ / divisor_) % RADIX));
         }
 
-        // Allow assignment only if QT itself is not const.
-        constexpr std::enable_if_t<!std::is_const_v<QT>, const reference_&>
-            operator=(const T& digit) const noexcept {
+        constexpr const auto& operator=(const T& digit) const noexcept {
           const auto is_negative = *number_ < 0;
           auto temp = make_positive(*number_);
           temp -= ((temp / divisor_) % RADIX) * divisor_;
@@ -150,43 +147,41 @@ class digit_adaptor {
           return *this;
         }
 
-        constexpr reference_(const reference_&) noexcept = default;
-
         // Behaves like an lvalue reference, copying the referent's value to
         // our value, rather than copying the proxy.
-        //
-        // Allow assignment only if T itself is not const.
-        constexpr std::enable_if_t<!std::is_const_v<QT>, const reference_&>
-            operator=(const reference_& rhs) const noexcept {
+        constexpr const auto& operator=(const_reference_ rhs) const noexcept {
+          this->operator=(T{rhs});
+          return *this;
+        }
+        constexpr const auto& operator=(mutable_reference_ rhs) const noexcept {
           this->operator=(T{rhs});
           return *this;
         }
 
-        ~reference_() noexcept = default;
+        ~mutable_reference_() noexcept = default;
 
         // Convert a "reference" back into a "pointer."
         constexpr auto operator&() const noexcept {
-          return pointer_<QT>{number_, divisor_};
+          return mutable_pointer_{number_, divisor_};
         }
 
-        constexpr bool operator<(const reference_& rhs) const noexcept {
+        constexpr bool operator<(const_reference_ rhs) const noexcept {
           return T{*this} < T{rhs};
         }
 
-        constexpr bool operator==(const reference_& rhs) const noexcept {
+        constexpr bool operator==(const_reference_ rhs) const noexcept {
           return T{*this} == T{rhs};
         }
         
         // Forwards increments to underlying digit, as references should.
-        constexpr const reference_& operator++() const noexcept {
+        constexpr const auto& operator++() const noexcept {
           this->operator=(T{*this} + 1);
           return *this;
         }
         
         // Forwards decrements to underlying digit, as references should.
         // Allowed only if T is not const.
-        constexpr std::enable_if_t<!std::is_const_v<QT>, const reference_&>
-            operator--() const noexcept {
+        constexpr const auto& operator--() const noexcept {
           this->operator=(T{*this} - 1);
           return *this;
         }
@@ -195,7 +190,6 @@ class digit_adaptor {
         // increment is an rvalue, not an lvalue.  We cannot construct a
         // reference to the previous value of the digit.
         // Allowed only if T is not const.
-        template <std::enable_if_t<!std::is_const_v<QT>, bool> = true>
         constexpr T operator++(int) const noexcept {
           auto temp = T{*this}; 
           this->operator++();
@@ -204,7 +198,6 @@ class digit_adaptor {
         
         // Returns the previous value the digit.  See operator++(int).
         // Allowed only if T is not const.
-        template <std::enable_if_t<!std::is_const_v<QT>, bool> = true>
         constexpr T operator--(int) const noexcept {
           auto temp = T{*this}; 
           this->operator--();
@@ -213,46 +206,110 @@ class digit_adaptor {
 
         // Swaps the underlying digit values, not the reference proxies.
         // Allowed only if T is not const.
-        template <std::enable_if_t<!std::is_const_v<QT>, bool> = true>
-        constexpr void swap(reference_& rhs) const noexcept {
+        constexpr void swap(const mutable_reference_& rhs) const noexcept {
           auto d1 = T{*this};
           auto d2 = T{rhs};
           this->operator=(d2);
           rhs.operator=(d1);
         }
 
+        // We can convert to a const_reference_ at the drop of a hat.
+        constexpr operator const_reference_() const noexcept {
+          return const_reference_{*this};
+        }
+
       private:
         T *const number_;
-        const T  divisor_;
+        const NCU divisor_;
+        friend class const_reference_;
     };
 
-    template <typename QT>
-    class pointer_ {
+    // Behaves like a mutable pointer to d digit, but it's really just sititng
+    // on a mutable_reference_.
+    class mutable_pointer_ {
       public:
-        constexpr pointer_(T* number, const T divisor) noexcept
+        constexpr mutable_pointer_(T* number, NCU divisor) noexcept
         : ref_{number, divisor} {}
 
-        constexpr reference_<QT> operator->() const { return ref_; }
-        constexpr reference_<QT> operator*()  const { return ref_; }
+        constexpr auto operator->() const { return ref_; }
+        constexpr auto operator*()  const { return ref_; }
 
       private:
-        reference_<QT> ref_;
+        mutable_reference_ ref_;
     };
 
-    // Relies on ADL to specialize swap() for digit_adaptor::reference.
-    constexpr friend std::enable_if_t<!std::is_const_v<T>, void> swap(
-        reference_<T> dp1, reference_<T> dp2) {
-      dp1.swap(dp2);
-    }
+    // Provides read-only indirect access to a digit held in an underlying
+    // digit adaptor.
+    //
+    // We provide a const reference proxy rather than returning a value like
+    // std::bitset does, to preserve the fiction that we're a container. 
+    class const_reference_ {
+      public:
+        constexpr const_reference_(T* number, NCU divisor) noexcept
+        : number_{number}, divisor_{divisor} {}
+
+        // Allow constructing copies of const_references from other
+        // const_references.
+        constexpr const_reference_(const const_reference_&) noexcept = default;
+
+        // Allow constructing const_reference from a reference.
+        constexpr const_reference_(const mutable_reference_& ref)
+        : number_{ref.number_}, divisor_{ref.divisor_} {}
+
+        constexpr operator T () const noexcept {
+          return T(make_positive((*number_ / divisor_) % RADIX));
+        }
+
+        ~const_reference_() noexcept = default;
+
+        // Convert a "reference" back into a "pointer."
+        constexpr auto operator&() const noexcept {
+          return const_pointer_{number_, divisor_};
+        }
+
+        constexpr bool operator<(const_reference_ rhs) const noexcept {
+          return T{*this} < T{rhs};
+        }
+
+        constexpr bool operator==(const_reference_ rhs) const noexcept {
+          return T{*this} == T{rhs};
+        }
+
+      private:
+        const T *const number_;
+        const NCU divisor_;
+    };
+
+    // Behaves like a const pointer to d digit, but it's really just sititng
+    // on a const_reference_.
+    class const_pointer_ {
+      public:
+        constexpr const_pointer_(T* number, NCU divisor) noexcept
+        : ref_{number, divisor} {}
+
+        constexpr auto operator->() const { return ref_; }
+        constexpr auto operator*()  const { return ref_; }
+
+      private:
+        const_reference_ ref_;
+    };
+
+    // Only pick up the mutable pointer and reference types if T is mutable.
+    using pointer_   = std::conditional_t<std::is_const_v<T>,
+                           const_pointer_, mutable_pointer_>;
+    using reference_ = std::conditional_t<std::is_const_v<T>,
+                           const_reference_, mutable_reference_>;
 
     template <iterator_dir Direction, typename QT = T>
     class iterator_ {
       public:
         using iterator_category = std::random_access_iterator_tag;
         using difference_type   = std::ptrdiff_t;
-        using value_type        = QT;
-        using pointer           = pointer_<QT>;
-        using reference         = reference_<QT>;
+        using value_type        = std::remove_cv_t<T>;
+        using pointer           = std::conditional_t<std::is_const_v<QT>,
+                                      const_pointer_, pointer_>;
+        using reference         = std::conditional_t<std::is_const_v<QT>,
+                                      const_reference_, reference_>;
 
         constexpr iterator_(const digit_adaptor& da, std::size_t index) noexcept
         : digit_adaptor_{&da}, index_{index} {}
@@ -336,17 +393,9 @@ class digit_adaptor {
           return !this->operator>(rhs);
         }
 
-        constexpr auto operator*() const {
-          const auto divisor =
-            compute_divisor<Direction>(index_, digit_adaptor_->digits_);
-              
-          if constexpr (std::is_const_v<T>) {
-            const auto temp = (digit_adaptor_->number_ / divisor) % RADIX;
-            return make_positive(temp);
-          } else {
-            return 
-              reference_<QT>(&digit_adaptor_->number_, divisor);
-          }
+        constexpr reference operator*() const noexcept {
+          return {&digit_adaptor_->number_,
+                  compute_divisor<Direction>(index_, digit_adaptor_->digits_)};
         }
 
       private:
@@ -359,21 +408,25 @@ class digit_adaptor {
     using value_type      = std::remove_cv_t<T>;
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
-    using pointer         = digit_adaptor::pointer_<T>;
-    using const_pointer   = digit_adaptor::pointer_<const T>;
-    using reference       = digit_adaptor::reference_<T>;
-    using const_reference = digit_adaptor::reference_<const T>;
+    using pointer         = digit_adaptor::pointer_;
+    using const_pointer   = digit_adaptor::const_pointer_;
+    using reference       = digit_adaptor::reference_;
+    using const_reference = digit_adaptor::const_reference_;
     using iterator        = digit_adaptor::iterator_<Forward, T>;
     using const_iterator  = digit_adaptor::iterator_<Forward, const T>;
 };
 
+// Relies on ADL to specialize swap() for digit_adaptor::reference.
+// Uses T::is_digit_adaptor_mutable_reference for SFINAE.
+template <typename T>
+constexpr void swap(const T& dp1, const T& dp2) noexcept {
+  static_assert(
+    std::is_same_v<typename T::is_digit_adaptor_mutable_reference,
+                   std::true_type>, ""
+  );
+
+  dp1.swap(dp2);
+}
+
 }  // namespace jz
-
-/*
-template <typename T, int RADIX>
-constexpr std::enable_if_t<!std::is_const_v<T>, void> swap(
-    jz::digit_adaptor<T, RADIX>::reference dp1,
-    jz::digit_adaptor<T, RADIX>::reference dp2);
-*/
-
 #endif // DIGIT_ADAPTOR_HH_

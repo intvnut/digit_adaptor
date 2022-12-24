@@ -32,6 +32,12 @@ int main() {
     output_digits(da, u);
     da[0]=1;
     output_digits(da, u);
+    auto ri = da.rbegin();
+    *ri++ = 1;
+    *ri++ = 2;
+    *ri++ = 3;
+    *ri++ = 4;
+    output_digits(da, u);
   }
 
   {
@@ -49,5 +55,24 @@ int main() {
     output_digits(da, i);
     da[0]=1;
     output_digits(da, i);
+    auto ri = da.rbegin();
+    *ri++ = 1;
+    *ri++ = 2;
+    *ri++ = 3;
+    *ri++ = 4;
+    output_digits(da, i);
+  }
+
+  {
+    auto       mu = 8675309;
+    const auto cu = 8675319;
+    auto mda = digit_adaptor{mu};
+    auto cda = digit_adaptor{cu};
+
+    for (int i = 0; i < 7; ++i) {
+      std::cout 
+        << "mda[" << i << "] == cda[" << i << "]? "
+        << (mda[i] == cda[i]) << '\n';
+    }
   }
 }
