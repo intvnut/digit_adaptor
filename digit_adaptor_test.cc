@@ -74,5 +74,11 @@ int main() {
         << "mda[" << i << "] == cda[" << i << "]? "
         << (mda[i] == cda[i]) << '\n';
     }
+
+    for (int i = 0; i < 7; ++i) {
+      std::cout
+        << "mda[" << i << "] + cda[" << i << "]? "
+        << (mda[i] + cda[i]) << '\n';
+    }
   }
 }
