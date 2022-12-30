@@ -66,8 +66,8 @@ int main() {
   {
     auto       mu = 8675309;
     const auto cu = 8675319;
-    auto mda = digit_adaptor{mu};
-    auto cda = digit_adaptor{cu};
+    auto mda = digit_adaptor<decltype(mu)>{mu};
+    auto cda = digit_adaptor<decltype(cu)>{cu};
 
     for (std::size_t i = 0; i < std::min(mda.size(), cda.size()); ++i) {
       std::cout

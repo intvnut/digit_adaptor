@@ -116,7 +116,7 @@ class digit_adaptor {
       // Clamps index to digits >= index >= 0.
       index = std::max(std::min(digits, index), std::size_t{0});
 
-      if constexpr (Direction == Forward) {
+      if (Direction == Forward) {
         for (auto i = index + 1; i < digits; ++i) {
           divisor *= RADIX;
         }
@@ -310,9 +310,9 @@ class digit_adaptor {
     };
 
     // Only pick up the mutable pointer and reference types if T is mutable.
-    using pointer_   = std::conditional_t<std::is_const_v<T>,
+    using pointer_   = std::conditional_t<std::is_const<T>::value,
                            const_pointer_, mutable_pointer_>;
-    using reference_ = std::conditional_t<std::is_const_v<T>,
+    using reference_ = std::conditional_t<std::is_const<T>::value,
                            const_reference_, mutable_reference_>;
 
     // The iterator_ supports both forward and reverse traversal, as well as
@@ -334,10 +334,10 @@ class digit_adaptor {
         // a const iterator to those same elements; however, this logic doesn't
         // are.  The aliases above handle is_const<T>, while these handle
         // is_const<QT>.
-        using pointer           = std::conditional_t<std::is_const_v<QT>,
-                                      const_pointer_, pointer_>;
-        using reference         = std::conditional_t<std::is_const_v<QT>,
-                                      const_reference_, reference_>;
+        using pointer   = std::conditional_t<std::is_const<QT>::value,
+                              const_pointer_, pointer_>;
+        using reference = std::conditional_t<std::is_const<QT>::value,
+                              const_reference_, reference_>;
 
         constexpr iterator_(const digit_adaptor& da, std::size_t index) noexcept
         : digit_adaptor_{&da}, index_{index} {}
@@ -449,8 +449,8 @@ class digit_adaptor {
 template <typename T>
 constexpr void swap(const T& dp1, const T& dp2) noexcept {
   static_assert(
-    std::is_same_v<typename T::is_digit_adaptor_mutable_reference,
-                   std::true_type>, ""
+    std::is_same<typename T::is_digit_adaptor_mutable_reference,
+                 std::true_type>::value, ""
   );
 
   dp1.swap(dp2);
