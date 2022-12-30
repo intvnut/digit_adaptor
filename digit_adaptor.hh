@@ -239,8 +239,9 @@ class digit_adaptor {
         friend class const_reference_;
     };
 
-    // Behaves like a mutable pointer to d digit, but it's really just sititng
-    // on a mutable_reference_.
+    // Minimally behaves like a pointer to mutable digit.  It's really just
+    // sititng on a mutable_reference_, and the only thing you can do is
+    // "dereference" it to yield the underlying mutable_reference_.
     class mutable_pointer_ {
       public:
         constexpr mutable_pointer_(T* number, NCU divisor) noexcept
@@ -295,8 +296,9 @@ class digit_adaptor {
         const NCU divisor_;
     };
 
-    // Behaves like a const pointer to d digit, but it's really just sititng
-    // on a const_reference_.
+    // Minimally behaves like a pointer to const digit.  It's really just
+    // sititng on a const_reference_, and the only thing you can do is
+    // "dereference" it to yield the underlying const_reference_.
     class const_pointer_ {
       public:
         constexpr const_pointer_(T* number, NCU divisor) noexcept
