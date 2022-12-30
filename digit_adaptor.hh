@@ -10,17 +10,27 @@ namespace jz {
 // Adapts an integer type (or type that behaves as one) to look like a standard
 // container holding digits in a particular radix.  The container can be const
 // without the contained entity being const.
+//
+// Digits in the container are numbered left-to-right.  That is, the most
+// significant digit is at the start of the container and the least signficant
+// is at the end.
 template <typename T, int RADIX = 10>
 class digit_adaptor {
   static_assert(RADIX > 1, "RADIX must be larger than 1");
 
   public:
+    // Sets number of digits based on the current magnitude of the number.
+    // The number zero gets 1 digit.
     constexpr explicit digit_adaptor(T& number) noexcept
     : number_{number}, digits_{total_digits(number)} {}
 
-    constexpr digit_adaptor(T& number, std::size_t digits) noexcept
+    // Sets an explicit number of digits, irrespective of the number's
+    // current magnitude.  Setting the number of digits smaller than the
+    // number's current magnitude may result in unusual operation.
+    constexpr explicit digit_adaptor(T& number, std::size_t digits) noexcept
     : number_{number}, digits_{digits} {}
 
+    // Forward iterators.
     constexpr auto begin() const noexcept { 
       return iterator_<Forward, T>{*this, 0}; 
     }
@@ -34,6 +44,7 @@ class digit_adaptor {
       return iterator_<Forward, const T>{*this, digits_};
     }
 
+    // Reverse iterators.
     constexpr auto rbegin() const noexcept { 
       return iterator_<Reverse, T>{*this, 0}; 
     }
@@ -47,14 +58,18 @@ class digit_adaptor {
       return iterator_<Reverse, const T>{*this, digits_};
     }
 
+    // Explicit casts to T return the number.
     constexpr explicit operator T () const noexcept {
       return number_;
     }
 
+    // Provides indirect access to each digit.  Behaves as a reference or a
+    // const reference depending on whether T is const.
     constexpr auto operator[] (int index) const noexcept {
       return reference{&number_, compute_divisor(index, digits_)};
     }
 
+    // Returns the number of digits in the container.
     constexpr std::size_t size() const noexcept {
       return digits_;
     }
@@ -300,12 +315,25 @@ class digit_adaptor {
     using reference_ = std::conditional_t<std::is_const_v<T>,
                            const_reference_, mutable_reference_>;
 
+    // The iterator_ supports both forward and reverse traversal, as well as
+    // const and non-const iterators.  QT is the "qualified T."  That is, for
+    // a const iterator, QT = const T, while a non-const iterator has QT = T.
     template <iterator_dir Direction, typename QT = T>
     class iterator_ {
       public:
         using iterator_category = std::random_access_iterator_tag;
         using difference_type   = std::ptrdiff_t;
         using value_type        = std::remove_cv_t<T>;
+
+        // The type aliases just above this class already fold const and
+        // non-const reference and pointer types into a common type for const
+        // elements.  The iterator just has to discriminate between const and
+        // non-const iterators.
+        //
+        // A non-const iterator to const elements ends up being the same as
+        // a const iterator to those same elements; however, this logic doesn't
+        // are.  The aliases above handle is_const<T>, while these handle
+        // is_const<QT>.
         using pointer           = std::conditional_t<std::is_const_v<QT>,
                                       const_pointer_, pointer_>;
         using reference         = std::conditional_t<std::is_const_v<QT>,
