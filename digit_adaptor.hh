@@ -448,6 +448,10 @@ class digit_adaptor {
 
 // Relies on ADL to specialize swap() for digit_adaptor::reference.
 // Uses T::is_digit_adaptor_mutable_reference for SFINAE.
+//
+// Digit references are not swappable with std::swap, and I have no intention
+// of trying to fix that.  Standard practice is to provide swap() in your own
+// namespace and let ADL find it.
 template <typename T>
 constexpr void swap(const T& dp1, const T& dp2) noexcept {
   static_assert(
