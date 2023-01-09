@@ -140,6 +140,11 @@ int main() {
         << (mda[i] == cda[i]) << '\n';
     }
 
+
+    std::cout << "mda[0] = " << mda[0] << "  mda[1] = " << mda[1] << '\n';
+    swap(mda[0], mda[1]);
+    std::cout << "mda[0] = " << mda[0] << "  mda[1] = " << mda[1] << '\n';
+
     for (std::size_t i = 0; i < std::min(mda.size(), cda.size()); ++i) {
       std::cout
         << "mda[" << i << "] + cda[" << i << "]? "
