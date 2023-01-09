@@ -1,4 +1,4 @@
-# Projection Iterator Adaptor
+# Digit Adaptor
 
 ## License
 
