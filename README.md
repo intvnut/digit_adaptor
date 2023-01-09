@@ -15,7 +15,7 @@ to manipulate digits in a decimal number in a manner that's more consistent
 with manipulating a string.  For example:
 
 * [How do you switch the first and last digit of a number in C++?](https://www.quora.com/How-do-you-switch-the-first-and-last-digit-of-a-number-in-C)
-* [How can you swap the first and last digit of a number without using any functions?](How can you swap the first and last digit of a number without using any functions?)
+* [How can you swap the first and last digit of a number without using any functions?](https://www.quora.com/How-can-you-swap-the-first-and-last-digit-of-a-number-without-using-any-functions)
 
 ...and so on.
 
