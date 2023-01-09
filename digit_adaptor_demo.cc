@@ -1,3 +1,5 @@
+// Author:  Joe Zbiciak <joe.zbiciak@leftturnonly.info>
+// SPDX-License-Identifier:  CC-BY-SA-4.0
 #include "digit_adaptor.hh"
 #include <algorithm>
 #include <iostream>

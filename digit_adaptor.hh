@@ -1,3 +1,5 @@
+// Author:  Joe Zbiciak <joe.zbiciak@leftturnonly.info>
+// SPDX-License-Identifier:  CC-BY-SA-4.0
 #ifndef DIGIT_ADAPTOR_HH_
 #define DIGIT_ADAPTOR_HH_
 
