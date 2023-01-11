@@ -11,7 +11,7 @@ namespace {
 using jz::digit_adaptor;
 
 // This code would benefit from a proper unit-test framework.  I have not
-// included one here to keep this repository free of external dependencies. 
+// included one here to keep this repository free of external dependencies.
 // Instead, I've just produced a very minimal framework.
 using TestCaseFxn = bool(void);
 
@@ -404,37 +404,37 @@ bool TestLeadingZerosWithPositiveInt() {
   if (d.size() != 5) { return false; }
   d[0] = 0;
   if (x != 2345)  { return false; }
-  d[1] = 0;      
+  d[1] = 0;
   if (x != 345)   { return false; }
-  d[2] = 0;      
+  d[2] = 0;
   if (x != 45)    { return false; }
-  d[3] = 0;      
+  d[3] = 0;
   if (x != 5)     { return false; }
-  d[4] = 0;      
+  d[4] = 0;
   if (x != 0)     { return false; }
-                 
-  d[0] = 1;      
+
+  d[0] = 1;
   if (x != 10000) { return false; }
-  d[1] = 2;      
+  d[1] = 2;
   if (x != 12000) { return false; }
-  d[2] = 3;      
+  d[2] = 3;
   if (x != 12300) { return false; }
-  d[3] = 4;      
+  d[3] = 4;
   if (x != 12340) { return false; }
-  d[4] = 5;      
+  d[4] = 5;
   if (x != 12345) { return false; }
 
   x = 0;
-                 
-  d[4] = 5;      
+
+  d[4] = 5;
   if (x != 5)     { return false; }
-  d[3] = 4;      
+  d[3] = 4;
   if (x != 45)    { return false; }
-  d[2] = 3;      
+  d[2] = 3;
   if (x != 345)   { return false; }
-  d[1] = 2;      
+  d[1] = 2;
   if (x != 2345)  { return false; }
-  d[0] = 1;      
+  d[0] = 1;
   if (x != 12345) { return false; }
 
   return true;
@@ -449,31 +449,31 @@ bool TestLeadingZerosWithNegativeInt() {
   if (d.size() != 5) { return false; }
   d[0] = 0;
   if (x != -2345)  { return false; }
-  d[1] = 0;      
+  d[1] = 0;
   if (x != -345)   { return false; }
-  d[2] = 0;      
+  d[2] = 0;
   if (x != -45)    { return false; }
-  d[3] = 0;      
+  d[3] = 0;
   if (x != -5)     { return false; }
-                 
-  d[0] = 1;      
+
+  d[0] = 1;
   if (x != -10005) { return false; }
-  d[1] = 2;      
+  d[1] = 2;
   if (x != -12005) { return false; }
-  d[2] = 3;      
+  d[2] = 3;
   if (x != -12305) { return false; }
-  d[3] = 4;      
+  d[3] = 4;
   if (x != -12345) { return false; }
 
   x = -5;
-                 
-  d[3] = 4;      
+
+  d[3] = 4;
   if (x != -45)    { return false; }
-  d[2] = 3;      
+  d[2] = 3;
   if (x != -345)   { return false; }
-  d[1] = 2;      
+  d[1] = 2;
   if (x != -2345)  { return false; }
-  d[0] = 1;      
+  d[0] = 1;
   if (x != -12345) { return false; }
 
   return true;
@@ -669,7 +669,7 @@ int main() {
 
   for (const auto& test : tests) {
     const bool passed = test.test();
-    std::cout << (passed ? "PASS     :  " : "     FAIL:  ") 
+    std::cout << (passed ? "PASS     :  " : "     FAIL:  ")
               << test.name << '\n';
     pass_cnt += passed == true;
     fail_cnt += passed == false;
