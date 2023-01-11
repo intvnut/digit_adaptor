@@ -1,5 +1,8 @@
 # Digit Adaptor
 
+> It is brilliancy, disguised as bullshit, disguised as brilliancy.
+-[John Byrd](https://www.quora.com/How-do-I-find-the-count-of-all-different-digits-in-a-number-in-C-C/answer/Joe-Zbiciak?comment_id=124725133&comment_type=2)
+
 ## License
 
 Everything in this project is authored by me (Joe Zbiciak,
