@@ -3,6 +3,8 @@
 #ifndef DIGIT_ADAPTOR_HH_
 #define DIGIT_ADAPTOR_HH_
 
+static_assert(__cplusplus >= 201400L, "Requires C++14 or later.");
+
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
